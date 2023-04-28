@@ -116,8 +116,11 @@ int tcp_create_and_listen(int port)
 
 int tcp_accept(int server_sock)
 {
-    /* TO BE IMPLEMENTED */
-    return 0;
+    int socketfd = accept(server_sock,NULL,NULL);
+    check_error(socketfd,"accept");
+
+    return socketfd;
+    
 }
 
 int tcp_wait(fd_set *waiting_set, int wait_end)
