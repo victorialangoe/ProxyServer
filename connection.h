@@ -19,7 +19,7 @@ int tcp_connect( char* hostname, int port );
  */
 int tcp_read( int sock, char* buffer, int n );
 
-/* Writes the give number of bytes from the buffer buffer to the socket sock.
+/* Writes the given number of bytes from the buffer buffer to the socket sock.
  * Prints an error message to stderr in case of failure.
  * Return the number of written bytes in case of success and -1 in case of
  * error.
