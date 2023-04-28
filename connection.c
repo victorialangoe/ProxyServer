@@ -24,7 +24,7 @@ void check_error(int res, char *msg)
 {
     if (res == -1)
     {
-        fprintf(stderr, msg);
+        perror(msg);
         exit(EXIT_FAILURE); // TODO: find out if I can do it like this or return -1
     }
 }
@@ -33,6 +33,9 @@ int tcp_connect(char *hostname, int port)
 {
     int socketfd, rc;
     struct addrinfo hints, *res, *rp;
+    char servname[6];
+
+    sprintf(servname, "%d", port);
 
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     check_error(socketfd, "socket");
@@ -41,7 +44,7 @@ int tcp_connect(char *hostname, int port)
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    rc = getaddrinfo(hostname, port, &hints, &res);
+    rc = getaddrinfo(hostname, servname, &hints, &res);
     if (rc != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rc));
@@ -70,7 +73,7 @@ int tcp_read(int sock, char *buffer, int n)
 
 int tcp_write(int sock, char *buffer, int bytes)
 {
-    int wc = write(socket, &buffer, bytes - wc);
+    int wc = write(sock, &buffer, bytes);
     check_error(wc, "write");
     return wc;
 }
@@ -80,7 +83,7 @@ int tcp_write_loop(int sock, char *buffer, int bytes)
     int wc = 0;
     while (wc < bytes + 1)
     {
-        wc += write(socket, &buffer, bytes - wc);
+        wc += write(sock, &buffer, bytes - wc);
         check_error(wc, "write");
     }
     return wc;
@@ -122,7 +125,7 @@ int tcp_accept(int server_sock)
 
 int tcp_wait(fd_set *waiting_set, int wait_end)
 {
-    int rc = select(wait_end + 1, &waiting_set, NULL, NULL, NULL);
+    int rc = select(wait_end + 1, waiting_set, NULL, NULL, NULL);
     check_error(rc, "select");
 
     return rc;
@@ -132,8 +135,8 @@ int tcp_wait_timeout(fd_set *waiting_set, int wait_end, int seconds)
 {
     struct timeval timeval;
     timeval.tv_sec = seconds;
-    int rc = select(wait_end + 1, &waiting_set, NULL, NULL, &timeval);
-    check_error(rc,"select");
+    int rc = select(wait_end + 1, waiting_set, NULL, NULL, &timeval);
+    check_error(rc, "select");
 
     return rc;
 }

@@ -27,7 +27,10 @@
  */
 struct Client
 {
-    /* your choice of variables */
+    int id;
+    int destinationID;
+    int formatType;
+    int port;
 };
 
 typedef struct Client Client;
