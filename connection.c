@@ -125,8 +125,10 @@ int tcp_accept(int server_sock)
 
 int tcp_wait(fd_set *waiting_set, int wait_end)
 {
-    /* TO BE IMPLEMENTED */
-    return 0;
+    int rc =select(wait_end+1,&waiting_set,NULL,NULL,NULL);
+    check_error(rc,"select");
+
+    return rc;
 }
 
 int tcp_wait_timeout(fd_set *waiting_set, int wait_end, int seconds)
