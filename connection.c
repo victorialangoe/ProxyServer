@@ -72,6 +72,13 @@ int tcp_read(int sock, char *buffer, int n)
 
 int tcp_write(int sock, char *buffer, int bytes)
 {
+    int wc = write(socket, &buffer, bytes - wc);
+    check_error(wc, "write");
+    return wc;
+}
+
+int tcp_write_loop(int sock, char *buffer, int bytes)
+{
     int wc = 0;
     while (wc < bytes + 1)
     {
@@ -79,12 +86,6 @@ int tcp_write(int sock, char *buffer, int bytes)
         check_error(wc, "write");
     }
     return wc;
-}
-
-int tcp_write_loop(int sock, char *buffer, int bytes)
-{
-    /* TO BE IMPLEMENTED */
-    return 0;
 }
 
 void tcp_close(int sock)
