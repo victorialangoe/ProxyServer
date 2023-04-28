@@ -26,18 +26,18 @@ void check_error(int res, char *msg)
 {
     if (res == -1)
     {
-        perror(msg);
-        exit(EXIT_FAILURE);
+        fprintf(stderr, msg);
+        exit(EXIT_FAILURE); // TODO: find out if I can do it like this or return -1
     }
 }
 
 int tcp_connect(char *hostname, int port)
 {
-    int fd, rc;
+    int socketfd, rc;
     struct addrinfo hints, *res, *rp;
 
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    check_error(fd, "socket");
+    socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    check_error(socketfd, "socket");
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
@@ -52,13 +52,13 @@ int tcp_connect(char *hostname, int port)
 
     for (rp = res; rp != NULL; rp = rp->ai_next)
     {
-        rc = connect(fd, rp->ai_addr, rp->ai_addrlen);
+        rc = connect(socketfd, rp->ai_addr, rp->ai_addrlen);
         check_error(rc, "connect");
     }
 
     freeaddrinfo(res);
 
-    return fd;
+    return socketfd;
 }
 
 int tcp_read(int sock, char *buffer, int n)
@@ -90,13 +90,28 @@ int tcp_write_loop(int sock, char *buffer, int bytes)
 
 void tcp_close(int sock)
 {
-    /* TO BE IMPLEMENTED */
+    close(sock);
 }
 
 int tcp_create_and_listen(int port)
 {
-    /* TO BE IMPLEMENTED */
-    return 0;
+    int socketfd,rc;
+    struct sockaddr_in address;
+
+    socketfd = socket(AF_INET,SOCK_STREAM,0);
+    check_error(socketfd,"socket");
+
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = INADDR_ANY;
+
+    rc = bind(socketfd,(struct sockaddr *)&address,sizeof(struct sockaddr_in));
+    check_error(rc,"bind");
+
+    rc = listen(socketfd,SOMAXCONN);
+    check_error(rc,"listen");
+
+    return socketfd;
 }
 
 int tcp_accept(int server_sock)
