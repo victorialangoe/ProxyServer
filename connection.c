@@ -33,25 +33,27 @@ void check_error(int res, char *msg)
 
 int tcp_connect(char *hostname, int port)
 {
-    int fd,rc;
-    struct addrinfo hints,*res,*rp;
+    int fd, rc;
+    struct addrinfo hints, *res, *rp;
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
     check_error(fd, "socket");
 
-    memset(&hints, 0,sizeof(struct addrinfo));
+    memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    rc = getaddrinfo(hostname,port,&hints,&res);
-    if(rc != 0){
+    rc = getaddrinfo(hostname, port, &hints, &res);
+    if (rc != 0)
+    {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rc));
         exit(EXIT_FAILURE);
     }
 
-    for(rp = res; rp != NULL; rp = rp->ai_next){
+    for (rp = res; rp != NULL; rp = rp->ai_next)
+    {
         rc = connect(fd, rp->ai_addr, rp->ai_addrlen);
-        check_error(rc,"connect");
+        check_error(rc, "connect");
     }
 
     freeaddrinfo(res);
@@ -61,8 +63,11 @@ int tcp_connect(char *hostname, int port)
 
 int tcp_read(int sock, char *buffer, int n)
 {
-    /* TO BE IMPLEMENTED */
-    return 0;
+    int rc;
+    rc = read(sock, buffer, n);
+    check_error(rc, "read");
+
+    return rc;
 }
 
 int tcp_write(int sock, char *buffer, int bytes)
