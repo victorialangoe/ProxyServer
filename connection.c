@@ -31,14 +31,14 @@ void check_error(int res, char *msg)
 
 int tcp_connect(char *hostname, int port)
 {
-    int socketfd, rc;
+    int socket_fd, rc;
     struct addrinfo hints, *res, *rp;
     char servname[6];
 
     sprintf(servname, "%d", port);
 
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    check_error(socketfd, "socket");
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    check_error(socket_fd, "socket");
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
@@ -53,13 +53,13 @@ int tcp_connect(char *hostname, int port)
 
     for (rp = res; rp != NULL; rp = rp->ai_next)
     {
-        rc = connect(socketfd, rp->ai_addr, rp->ai_addrlen);
+        rc = connect(socket_fd, rp->ai_addr, rp->ai_addrlen);
         check_error(rc, "connect");
     }
 
     freeaddrinfo(res);
 
-    return socketfd;
+    return socket_fd;
 }
 
 int tcp_read(int sock, char *buffer, int n)
@@ -96,31 +96,31 @@ void tcp_close(int sock)
 
 int tcp_create_and_listen(int port)
 {
-    int socketfd, rc;
+    int socket_fd, rc;
     struct sockaddr_in address;
 
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    check_error(socketfd, "socket");
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    check_error(socket_fd, "socket");
 
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = INADDR_ANY;
 
-    rc = bind(socketfd, (struct sockaddr *)&address, sizeof(struct sockaddr_in));
+    rc = bind(socket_fd, (struct sockaddr *)&address, sizeof(struct sockaddr_in));
     check_error(rc, "bind");
 
-    rc = listen(socketfd, SOMAXCONN);
+    rc = listen(socket_fd, SOMAXCONN);
     check_error(rc, "listen");
 
-    return socketfd;
+    return socket_fd;
 }
 
-int tcp_accept(int server_sock)
+int tcp_accept(int server_sock, struct sockaddr *restrict address, socklen_t *restrict address_len)
 {
-    int socketfd = accept(server_sock, NULL, NULL);
-    check_error(socketfd, "accept");
+    int socket_fd = accept(server_sock, address, address_len);
+    check_error(socket_fd, "accept");
 
-    return socketfd;
+    return socket_fd;
 }
 
 int tcp_wait(fd_set *waiting_set, int wait_end)

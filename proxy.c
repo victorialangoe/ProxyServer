@@ -30,20 +30,20 @@ struct Client
     int id;
     int destinationID;
     int formatType;
-    int port;
+    int socket_fd;
 };
 
 typedef struct Client Client;
 
-void usage( char* cmd )
+void usage(char *cmd)
 {
-    fprintf( stderr, "Usage: %s <port>\n"
-                     "       This is the proxy server. It takes as imput the port where it accepts connections\n"
-                     "       from \"xmlSender\", \"binSender\" and \"anyReceiver\" applications.\n"
-                     "       <port> - a 16-bit integer in host byte order identifying the proxy server's port\n"
-                     "\n",
-                     cmd );
-    exit( -1 );
+    fprintf(stderr, "Usage: %s <port>\n"
+                    "       This is the proxy server. It takes as imput the port where it accepts connections\n"
+                    "       from \"xmlSender\", \"binSender\" and \"anyReceiver\" applications.\n"
+                    "       <port> - a 16-bit integer in host byte order identifying the proxy server's port\n"
+                    "\n",
+            cmd);
+    exit(-1);
 }
 
 /*
@@ -53,8 +53,12 @@ void usage( char* cmd )
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void handleNewClient( int server_sock )
+int handleNewClient(int server_sock)
 {
+    struct sockaddr_in client;
+    socklen_t client_len = sizeof(client);
+
+    return tcp_accept(server_sock, (struct sockaddr *)&client, &client_len);
 }
 
 /*
@@ -64,8 +68,10 @@ void handleNewClient( int server_sock )
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void removeClient( Client* client )
+void removeClient(Client *client)
 {
+    tcp_close(client->socket_fd);
+    memset(client, 0, sizeof(Client));
 }
 
 /*
@@ -85,7 +91,7 @@ void removeClient( Client* client )
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void forwardMessage( Record* msg )
+void forwardMessage(Record *msg)
 {
 }
 
@@ -105,27 +111,28 @@ void forwardMessage( Record* msg )
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void handleClient( Client* client )
+void handleClient(Client *client)
 {
 }
 
-int main( int argc, char* argv[] )
+int main(int argc, char *argv[])
 {
     int port;
     int server_sock;
 
-    if( argc != 2 )
+    if (argc != 2)
     {
-        usage( argv[0] );
+        usage(argv[0]);
     }
 
-    port = atoi( argv[1] );
+    port = atoi(argv[1]);
 
-    server_sock = tcp_create_and_listen( port );
-    if( server_sock < 0 ) exit( -1 );
+    server_sock = tcp_create_and_listen(port);
+    if (server_sock < 0)
+        exit(-1);
 
     /* add your initialization code */
-    
+
     /*
      * The following part is the event loop of the proxy. It waits for new connections,
      * new data arriving on existing connection, and events that indicate that a client
@@ -139,13 +146,11 @@ int main( int argc, char* argv[] )
     do
     {
         /* fill in your code */
-    }
-    while( 1 /* fill in your termination condition */ );
+    } while (1 /* fill in your termination condition */);
 
     /* add your cleanup code */
 
-    tcp_close( server_sock );
+    tcp_close(server_sock);
 
     return 0;
 }
-
