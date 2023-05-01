@@ -40,7 +40,8 @@ int tcp_connect(char *hostname, int port)
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     check_error(socket_fd, "socket");
 
-    memset(&hints, 0, sizeof(struct addrinfo));
+    memset(&hints, 0, sizeof(struct addrinfo)); // to ensure that any unused or garbage memory locations
+    // are set to a known value
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 

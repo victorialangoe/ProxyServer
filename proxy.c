@@ -71,7 +71,7 @@ int handleNewClient(int server_sock)
 void removeClient(Client *client)
 {
     tcp_close(client->socket_fd);
-    memset(client, 0, sizeof(Client));
+    memset(client, 0, sizeof(Client)); 
 }
 
 /*
