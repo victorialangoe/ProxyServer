@@ -1,0 +1,94 @@
+<sleep="1" />
+
+<record>
+  <source="A" />
+  <dest="W" />
+  <id="931" />
+  <semester="25" />
+  <grade="Bachelor" />
+</record>
+
+<sleep="1" />
+
+<record>
+  <source="A" />
+  <dest="Y" />
+  <username="HbgFVGHASiGsDuk" />
+  <id="9531" />
+  <group="9309" />
+  <courses>
+    <course="IN1010" />
+    <course="IN1020" />
+    <course="IN1030" />
+    <course="IN1050" />
+    <course="IN1140" />
+    <course="IN1150" />
+  </courses>
+</record>
+
+<sleep="5" />
+
+<record>
+  <source="A" />
+  <dest="X" />
+  <group="5794" />
+  <grade="Master" />
+  <courses>
+    <course="IN1000" />
+    <course="IN1010" />
+    <course="IN1020" />
+    <course="IN1030" />
+    <course="IN1050" />
+    <course="IN1910" />
+  </courses>
+</record>
+
+<sleep="2" />
+
+<record>
+  <source="A" />
+  <dest="X" />
+  <semester="25" />
+</record>
+
+<sleep="4" />
+
+<record>
+  <source="A" />
+  <dest="Y" />
+  <group="8928" />
+  <grade="PhD" />
+  <courses>
+    <course="IN1030" />
+    <course="IN1050" />
+    <course="IN1060" />
+    <course="IN1080" />
+    <course="IN1900" />
+  </courses>
+</record>
+
+<sleep="2" />
+
+<record>
+  <source="A" />
+  <dest="Y" />
+  <username="XDrgyA" />
+  <group="2618" />
+  <semester="2" />
+  <courses>
+    <course="IN1000" />
+    <course="IN1030" />
+    <course="IN1060" />
+    <course="IN1900" />
+  </courses>
+</record>
+
+<sleep="3" />
+
+<record>
+  <source="A" />
+  <dest="W" />
+  <id="1841" />
+  <semester="5" />
+  <grade="Bachelor" />
+</record>
