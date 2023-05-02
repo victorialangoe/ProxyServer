@@ -13,6 +13,7 @@
 #include "record.h"
 #include "recordToFormat.h"
 #include "recordFromFormat.h"
+#include "linkedlist.h"
 
 #include <arpa/inet.h>
 #include <sys/errno.h>
@@ -28,12 +29,15 @@
 struct Client
 {
     int id;
-    int destinationID;
-    int formatType;
+    int dest_id;
+    int format_type;
     int socket_fd;
+    struct Client* next;
 };
 
 typedef struct Client Client;
+struct ClientList client_list;
+
 
 void usage(char *cmd)
 {
@@ -53,12 +57,19 @@ void usage(char *cmd)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-int handleNewClient(int server_sock)
+int handle_new_client(int server_sock, char* filename)
 {
+    Client *client = malloc(sizeof(Client));
+    if(client == NULL){
+        fprintf(stderr,"Failed to allocate memory to a new client.\n");
+        return -1;
+    }
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
+    int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client, &client_len);
+    
 
-    return tcp_accept(server_sock, (struct sockaddr *)&client, &client_len);
+    return client_sock;
 }
 
 /*
@@ -68,7 +79,7 @@ int handleNewClient(int server_sock)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void removeClient(Client *client)
+void remove_client(Client *client)
 {
     tcp_close(client->socket_fd);
     memset(client, 0, sizeof(Client)); 
@@ -91,8 +102,9 @@ void removeClient(Client *client)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void forwardMessage(Record *msg)
+void forward_message(Record *msg)
 {
+    
 }
 
 /*
@@ -111,7 +123,7 @@ void forwardMessage(Record *msg)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void handleClient(Client *client)
+void handle_client(Client *client)
 {
 }
 
