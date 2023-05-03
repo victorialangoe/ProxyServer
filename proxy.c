@@ -14,6 +14,7 @@
 #include "recordToFormat.h"
 #include "recordFromFormat.h"
 #include "linkedlist.h"
+#include "proxy.h"
 
 #include <arpa/inet.h>
 #include <sys/errno.h>
@@ -26,14 +27,7 @@
 /* This struct should contain the information that you want
  * keep for one connected client.
  */
-struct Client
-{
-    int id;
-    int dest_id;
-    int format_type;
-    int socket_fd;
-    struct Client* next;
-};
+
 
 typedef struct Client Client;
 struct ClientList client_list;
@@ -64,8 +58,8 @@ int handle_new_client(int server_sock, char* filename)
         fprintf(stderr,"Failed to allocate memory to a new client.\n");
         return -1;
     }
-    struct sockaddr_in client;
-    socklen_t client_len = sizeof(client);
+    struct sockaddr_in client_address;
+    socklen_t client_len = sizeof(client_address);
     int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client, &client_len);
     
 

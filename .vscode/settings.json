@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "__availability": "c",
-        "string": "c"
-    }
+        "string": "c",
+        "linkedlist.h": "c",
+        "string.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

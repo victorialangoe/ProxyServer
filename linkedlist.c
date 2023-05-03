@@ -7,24 +7,29 @@ struct ClientList
     struct Client *head;
 };
 
-int check_format_type(char* filename) {
-    FILE* file = fopen(filename,"rb");
-    if(file == NULL){
-        printf("Could not open file%s\n",filename);
+int check_format_type(char *filename)
+{
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL)
+    {
+        printf("Could not open file%s\n", filename);
         exit(EXIT_FAILURE);
     }
 
     int symbol = fgetc(file);
     fclose(file);
 
-    if (symbol == '<'){
+    if (symbol == '<')
+    {
         return 1;
-    } else {
-        return  0;
+    }
+    else
+    {
+        return 0;
     }
 }
 
-void insert(struct ClientList *list, int source, int dest_id, int format_type, char* filename)
+void insert(struct ClientList *list, int source, int dest_id, int format_type, char *filename)
 {
     struct Client *client = (struct Client *)malloc(sizeof(struct Client));
     client->source = source;
@@ -34,7 +39,7 @@ void insert(struct ClientList *list, int source, int dest_id, int format_type, c
     list->head = client;
 }
 
-void remove(struct ClientList *list, int source)
+void remove_node(struct ClientList *list, int source)
 {
     struct Client *tmp = list->head;
     struct Client *prev = NULL;

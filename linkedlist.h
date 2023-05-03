@@ -1,5 +1,5 @@
-#ifndef linkedlist.h
-#define linkedlist .h
+#ifndef linkedlist_h
+#define linkedlist_h
 
 #include "proxy.h"
 
@@ -10,7 +10,7 @@ struct ClientList
 
 void insert(struct ClientList *list, int source, int dest_id, int format_type);
 
-void remove(struct ClientList *list, int source);
+void remove_node(struct ClientList *list, int source);
 
 struct Client *find_client_by_dest_id(struct ClientList *list, int dest_id);
 
