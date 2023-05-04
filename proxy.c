@@ -159,7 +159,7 @@ void remove_client(Client *client)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void forward_message(Record *msg)
+void forward_message(Record *msg, int format_type)
 {
 }
 
