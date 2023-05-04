@@ -29,15 +29,12 @@ int check_format_type(char *filename)
     }
 }
 
-void insert(struct ClientList *list, int source, int dest_id, int format_type, char *filename)
+void insert(struct ClientList *list, struct Client *client)
 {
-    struct Client *client = (struct Client *)malloc(sizeof(struct Client));
-    client->source = source;
-    client->dest_id = dest_id;
-    client->format_type = check_format_type(filename);
     client->next = list->head;
     list->head = client;
 }
+
 
 void remove_node(struct ClientList *list, int source)
 {
@@ -63,26 +60,16 @@ void remove_node(struct ClientList *list, int source)
     }
 }
 
-struct Client *find_client_by_dest_id(struct ClientList *list, int dest_id)
+struct Client *find_client_by_id(struct ClientList *list, int source)
 {
     struct Client *tmp = list->head;
     while (tmp != NULL)
     {
-        if (tmp->dest_id == dest_id)
+        if (tmp->source == source)
         {
             return tmp;
         }
         tmp = tmp->next;
     }
     return NULL;
-}
-
-int get_client_format_type(struct ClientList *list, int source)
-{
-    struct Client *client = find_client_by_dest_id(list, source);
-    if (client == NULL)
-    {
-        return -1;
-    }
-    return client->format_type;
 }

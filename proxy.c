@@ -53,7 +53,7 @@ int extract_dest_id_from_file_content(char *content, int format_type)
             dest_id = *start;
         }
     }
-    else // Binary format
+    else if (format_type == 0) // Binary format
     {
         if ((content[0] & 0x02) != 0) // Check if the 'has_dest' flag is set
         {
@@ -62,6 +62,29 @@ int extract_dest_id_from_file_content(char *content, int format_type)
     }
 
     return dest_id;
+}
+
+char extract_source_from_file_content(char *content, int format_type)
+{
+    char source = '\0';
+    if (format_type == 1) // XML format
+    {
+        char *start = strstr(content, "<source=");
+        if (start != NULL)
+        {
+            start += 9; // Move 9 characters ahead to reach the value of the source attribute
+            source = *start;
+        }
+    }
+    else if (format_type == 0) // Binary format
+    {
+        if ((content[0] & 0x01) != 0) // Check if the 'has_source' flag is set
+        {
+            source = content[1];
+        }
+    }
+
+    return source;
 }
 
 /*
@@ -82,21 +105,25 @@ int handle_new_client(int server_sock, char *filename, struct ClientList *list)
     struct sockaddr_in client_address;
     socklen_t client_len = sizeof(client_address);
     int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client_address, &client_len);
-
     int format_type = check_format_type(filename);
 
     char buffer[1024];
 
     int dest_id = extract_dest_id_from_file_content(buffer, format_type);
+    char source = extract_source_from_file_content(buffer, format_type);
 
-    if (dest_id != -1)
+    if (source != '\0' && dest_id != -1)
     {
-        insert(list, client_sock, dest_id, format_type, filename);
+        client->source = source;
+        client->dest_id = dest_id;
+        client->format_type = format_type;
+        insert(list, client);
     }
     else
     {
-        // Handle the case when there's no 'dest' in the file content
+        // Handle the case when there's no 'source' or 'dest' in the file content
         // You can add your code here
+        free(client); // Don't forget to free the memory if you don't insert the client into the list.
     }
 
     return client_sock;
