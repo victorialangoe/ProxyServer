@@ -60,7 +60,7 @@ int getCourseCode(char *course)
     }
     else
     {
-        return 0; // no course found
+        return 0;
     }
 }
 
@@ -69,7 +69,7 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
     Record *record = malloc(sizeof(Record));
     if (record == NULL)
     {
-        fprintf(stderr, "%s:%d Failed to allocate memory for a Record\n", __FILE__, __LINE__);
+        fprintf(stderr, "Failed to allocate memory.\n");
         return NULL;
     }
 
@@ -151,6 +151,10 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                 sscanf(start, "\"%7[^\"]\"", course);
                 start += strlen(course) + 4;
                 int courseCode = getCourseCode(course);
+                (if (courseCode == 0))
+                {
+                    break;
+                }
                 setCourse(record, courseCode);
             }
         }
@@ -169,6 +173,13 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
 
 Record *BinaryToRecord(char *buffer, int bufSize, int *bytesread)
 {
-    /* TO BE IMPLEMENTED */
+    Record *record = malloc(sizeof(Record));
+    if (record == NULL)
+    {
+        fprintf(stderr, "Failed to allocate memory.\n");
+        return NULL;
+    }
+
+    memset(record, 0, sizeof(Record));
     return NULL;
 }
