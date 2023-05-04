@@ -12,8 +12,8 @@ all: proxy xmlSender binSender anyReceiver
 #
 # Linkning the 4 programs
 #
-proxy: proxy.o connection.o record.o recordToFormat.o recordFromFormat.o
-	gcc $(CFLAGS) -o proxy proxy.o connection.o record.o recordToFormat.o recordFromFormat.o
+proxy: proxy.o connection.o record.o recordToFormat.o recordFromFormat.o linkedlist.o
+	gcc $(CFLAGS) -o proxy proxy.o connection.o record.o recordToFormat.o recordFromFormat.o linkedlist.o
 
 xmlSender: xmlSender.o connection.o xmlfile.o
 	gcc $(CFLAGS) -o xmlSender xmlSender.o connection.o xmlfile.o
@@ -56,6 +56,10 @@ recordFromFormat.o: recordFromFormat.c recordFromFormat.h record.h
 
 proxy.o: proxy.c connection.h record.h
 	gcc $(CFLAGS) -c $<
+
+linkedlist.o: linkedlist.c linkedlist.h
+	gcc $(CFLAGS) -c $<
+
 
 #
 # Deleting the only object files

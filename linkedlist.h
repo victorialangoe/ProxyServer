@@ -8,7 +8,9 @@ struct ClientList
     struct Client *head;
 };
 
-void insert(struct ClientList *list, int source, int dest_id, int format_type);
+int check_format_type(char *filename);
+
+void insert(struct ClientList *list, int source, int dest_id, int format_type, char *filename);
 
 void remove_node(struct ClientList *list, int source);
 

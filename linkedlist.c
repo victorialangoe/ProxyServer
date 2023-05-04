@@ -79,7 +79,7 @@ struct Client *find_client_by_dest_id(struct ClientList *list, int dest_id)
 
 int get_client_format_type(struct ClientList *list, int source)
 {
-    struct Client *client = find_client_by_id(list, source);
+    struct Client *client = find_client_by_dest_id(list, source);
     if (client == NULL)
     {
         return -1;

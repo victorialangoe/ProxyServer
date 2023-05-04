@@ -28,10 +28,7 @@
  * keep for one connected client.
  */
 
-
 typedef struct Client Client;
-struct ClientList client_list;
-
 
 void usage(char *cmd)
 {
@@ -44,6 +41,29 @@ void usage(char *cmd)
     exit(-1);
 }
 
+int extract_dest_id_from_file_content(char *content, int format_type)
+{
+    int dest_id = -1;
+    if (format_type == 1) // XML format
+    {
+        char *start = strstr(content, "<dest=");
+        if (start != NULL)
+        {
+            start += 6;
+            dest_id = *start;
+        }
+    }
+    else // Binary format
+    {
+        if ((content[0] & 0x02) != 0) // Check if the 'has_dest' flag is set
+        {
+            dest_id = content[2];
+        }
+    }
+
+    return dest_id;
+}
+
 /*
  * This function is called when a new connection is noticed on the server
  * socket.
@@ -51,17 +71,33 @@ void usage(char *cmd)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-int handle_new_client(int server_sock, char* filename)
+int handle_new_client(int server_sock, char *filename, struct ClientList *list)
 {
     Client *client = malloc(sizeof(Client));
-    if(client == NULL){
-        fprintf(stderr,"Failed to allocate memory to a new client.\n");
+    if (client == NULL)
+    {
+        fprintf(stderr, "Failed to allocate memory to a new client.\n");
         return -1;
     }
     struct sockaddr_in client_address;
     socklen_t client_len = sizeof(client_address);
-    int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client, &client_len);
-    
+    int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client_address, &client_len);
+
+    int format_type = check_format_type(filename);
+
+    char buffer[1024];
+
+    int dest_id = extract_dest_id_from_file_content(buffer, format_type);
+
+    if (dest_id != -1)
+    {
+        insert(list, client_sock, dest_id, format_type, filename);
+    }
+    else
+    {
+        // Handle the case when there's no 'dest' in the file content
+        // You can add your code here
+    }
 
     return client_sock;
 }
@@ -76,7 +112,7 @@ int handle_new_client(int server_sock, char* filename)
 void remove_client(Client *client)
 {
     tcp_close(client->socket_fd);
-    memset(client, 0, sizeof(Client)); 
+    memset(client, 0, sizeof(Client));
 }
 
 /*
@@ -98,7 +134,6 @@ void remove_client(Client *client)
  */
 void forward_message(Record *msg)
 {
-    
 }
 
 /*

@@ -254,10 +254,5 @@ Record *BinaryToRecord(char *buffer, int bufSize, int *bytesread)
         setGrade(record, Grade_None);
     }
 
-    if (bytesread != NULL)
-    {
-        *bytesread = start - buffer;
-    }
-
     return record;
 }
