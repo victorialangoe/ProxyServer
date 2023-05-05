@@ -6,7 +6,10 @@
 struct ClientList
 {
     struct Client *head;
+    int size;
 };
+
+struct ClientList *create_client_list();
 
 int check_format_type(char *filename);
 
@@ -17,5 +20,7 @@ void remove_node(struct ClientList *list, int source);
 struct Client *find_client_by_id(struct ClientList *list, int dest_id);
 
 int get_client_format_type(struct ClientList *list, int source);
+
+void delete_client_list(struct ClientList *list);
 
 #endif

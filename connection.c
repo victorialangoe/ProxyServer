@@ -20,13 +20,14 @@
 #include <netdb.h>
 // TODO: remove unused imports
 
-void check_error(int res, char *msg)
+int check_error(int res, char *msg)
 {
     if (res == -1)
     {
         perror(msg);
-        exit(EXIT_FAILURE); // TODO: find out if I can do it like this or return -1
+        return -1;
     }
+    return 0;
 }
 
 int tcp_connect(char *hostname, int port)

@@ -216,18 +216,18 @@ void handle_client(Client *client, struct ClientList *list)
     if (bytesRead > 0)
     {
         Record *msg = NULL;
-        int result = 0;
+        int bytesReadForFormat = sizeof(sizeof(buffer));
 
         if (client->format_type == 1) // XML format
         {
-            result = XMLtoRecord(msg, buffer, bytesRead);
+            msg = XMLtoRecord(buffer, bytesRead, &bytesReadForFormat);
         }
-        else // Binary format
+        else // Binary format, maybe write format_type == 0 in an else if block?
         {
-            result = BinaryToRecord(&msg, buffer, bytesRead);
+            msg = BinaryToRecord(buffer, bytesRead, &bytesReadForFormat);
         }
 
-        if (result > 0 && msg != NULL)
+        if (msg != NULL)
         {
             forward_message(msg, list);
         }
@@ -238,7 +238,7 @@ void handle_client(Client *client, struct ClientList *list)
     }
     else if (bytesRead == 0)
     {
-        // Client has disconnected
+        remove_node(list, client->source);
         remove_client(client, list);
     }
     else
@@ -264,6 +264,17 @@ int main(int argc, char *argv[])
         exit(-1);
 
     /* add your initialization code */
+    struct ClientList *clientList = create_client_list();
+
+    fd_set master_fds, read_fds;
+    int fd_max;
+    int new_client_sock;
+    int i;
+
+    FD_ZERO(&master_fds);
+    FD_ZERO(&read_fds);
+    FD_SET(server_sock, &master_fds);
+    fd_max = server_sock;
 
     /*
      * The following part is the event loop of the proxy. It waits for new connections,
@@ -277,11 +288,42 @@ int main(int argc, char *argv[])
      */
     do
     {
-        /* fill in your code */
-    } while (1 /* fill in your termination condition */);
+        read_fds = master_fds;
+        if (select(fd_max + 1, &read_fds, NULL, NULL, NULL) == -1)
+        {
+            perror("select");
+            exit(1);
+        }
+
+        for (i = 0; i <= fd_max; i++)
+        {
+            if (FD_ISSET(i, &read_fds))
+            {
+                if (i == server_sock)
+                {
+                    // New connection on the server socket
+                    new_client_sock = handle_new_client(server_sock, "filename.xml", clientList);
+                    FD_SET(new_client_sock, &master_fds);
+                    if (new_client_sock > fd_max)
+                    {
+                        fd_max = new_client_sock;
+                    }
+                }
+                else
+                {
+                    // Activity on an existing client's socket
+                    Client *client = find_client_by_id(clientList, i);
+                    if (client != NULL)
+                    {
+                        handle_client(client, clientList);
+                    }
+                }
+            }
+        }
+    } while (clientList->size > 0);
 
     /* add your cleanup code */
-
+    delete_client_list(clientList);
     tcp_close(server_sock);
 
     return 0;

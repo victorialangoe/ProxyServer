@@ -182,6 +182,7 @@ Record *BinaryToRecord(char *buffer, int bufSize, int *bytesread)
         return NULL;
     }
 
+    memset(record, 0, sizeof(Record));
     char *start = buffer;
     char *end = buffer + bufSize;
     uint8_t flags = *start++;
