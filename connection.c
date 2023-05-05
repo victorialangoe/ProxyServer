@@ -32,7 +32,7 @@ void check_error(int res, char *msg)
 int tcp_connect(char *hostname, int port)
 {
     int socket_fd, rc;
-    struct addrinfo hints, *res, *rp;
+    struct addrinfo hints, *res, *resp;
     char servname[6];
 
     sprintf(servname, "%d", port);
@@ -52,9 +52,9 @@ int tcp_connect(char *hostname, int port)
         exit(EXIT_FAILURE);
     }
 
-    for (rp = res; rp != NULL; rp = rp->ai_next)
+    for (resp = res; resp != NULL; resp = resp->ai_next)
     {
-        rc = connect(socket_fd, rp->ai_addr, rp->ai_addrlen);
+        rc = connect(socket_fd, resp->ai_addr, resp->ai_addrlen);
         check_error(rc, "connect");
     }
 

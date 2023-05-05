@@ -1,13 +1,3 @@
-/*
- * This is the main program for the proxy, which receives connections for sending and receiving clients
- * both in binary and XML format. Many clients can be connected at the same time. The proxy implements
- * an event loop.
- *
- * *** YOU MUST IMPLEMENT THESE FUNCTIONS ***
- *
- * The parameters and return values of the existing functions must not be changed.
- * You can add function, definition etc. as required.
- */
 #include "xmlfile.h"
 #include "connection.h"
 #include "record.h"
@@ -23,10 +13,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <string.h>
-
-/* This struct should contain the information that you want
- * keep for one connected client.
- */
 
 typedef struct Client Client;
 
@@ -136,8 +122,9 @@ int handle_new_client(int server_sock, char *filename, struct ClientList *list)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void remove_client(Client *client)
+void remove_client(Client *client, struct ClientList *list)
 {
+    remove_node(list, client->source);
     tcp_close(client->socket_fd);
     memset(client, 0, sizeof(Client));
 }
@@ -159,8 +146,50 @@ void remove_client(Client *client)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void forward_message(Record *msg, int format_type)
+void forward_message(Record *msg, struct ClientList *list)
 {
+    // Find the client with the matching dest_id
+    Client *client = find_client_by_id(list, msg->dest);
+
+    // If the client is not found, discard the Record
+    if (client == NULL)
+    {
+        fprintf(stderr, "No client found with that destination id: %d\n", msg->dest);
+        deleteRecord(msg);
+        return;
+    }
+
+    // Convert the Record to the appropriate format
+    char *buffer;
+    int bufSize = 0;
+
+    if (client->format_type == 1) // XML format
+    {
+        buffer = recordToXML(msg, &bufSize);
+    }
+    else // Binary format
+    {
+        // Modify the recordToBinary function to match the return type and arguments of recordToXML
+        buffer = recordToBinary(msg, &bufSize);
+    }
+
+    if (bufSize <= 0)
+    {
+        fprintf(stderr, "Error converting the Record to the required format.\n");
+        deleteRecord(msg);
+        return;
+    }
+
+    // Send the converted message to the client
+    int bytesSent = tcp_write(client->socket_fd, buffer, bufSize);
+    if (bytesSent != bufSize)
+    {
+        fprintf(stderr, "Failed to send the complete message to the client.\n");
+    }
+
+    // Delete the Record and free the buffer before returning
+    deleteRecord(msg);
+    free(buffer);
 }
 
 /*
@@ -179,8 +208,43 @@ void forward_message(Record *msg, int format_type)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void handle_client(Client *client)
+void handle_client(Client *client, struct ClientList *list)
 {
+    char buffer[1024];
+    int bytesRead = tcp_read(client->socket_fd, buffer, sizeof(buffer));
+
+    if (bytesRead > 0)
+    {
+        Record *msg = NULL;
+        int result = 0;
+
+        if (client->format_type == 1) // XML format
+        {
+            result = XMLtoRecord(msg, buffer, bytesRead);
+        }
+        else // Binary format
+        {
+            result = BinaryToRecord(&msg, buffer, bytesRead);
+        }
+
+        if (result > 0 && msg != NULL)
+        {
+            forward_message(msg, list);
+        }
+        else
+        {
+            fprintf(stderr, "Error converting the received data to a Record.\n");
+        }
+    }
+    else if (bytesRead == 0)
+    {
+        // Client has disconnected
+        remove_client(client, list);
+    }
+    else
+    {
+        // Handle read error
+    }
 }
 
 int main(int argc, char *argv[])

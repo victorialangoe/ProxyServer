@@ -14,7 +14,7 @@ void insert(struct ClientList *list, struct Client *client);
 
 void remove_node(struct ClientList *list, int source);
 
-struct Client *find_client_by_dest_id(struct ClientList *list, int dest_id);
+struct Client *find_client_by_id(struct ClientList *list, int dest_id);
 
 int get_client_format_type(struct ClientList *list, int source);
 

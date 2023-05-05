@@ -35,7 +35,6 @@ void insert(struct ClientList *list, struct Client *client)
     list->head = client;
 }
 
-
 void remove_node(struct ClientList *list, int source)
 {
     struct Client *tmp = list->head;
