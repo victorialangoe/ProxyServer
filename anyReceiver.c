@@ -41,6 +41,7 @@ int main( int argc, char* argv[] )
     char myid;
     char mytype;
     int sleeptime;
+    printf("MAIN IN anyReceiver\n"); 
 
     if( argc != 6 )
     {

@@ -249,6 +249,7 @@ void handle_client(Client *client, struct ClientList *list)
 
 int main(int argc, char *argv[])
 {
+    printf("MAIN IN PROXY\n"); // I SEE THIS IN THE XTERM
     int port;
     int server_sock;
 
@@ -258,8 +259,7 @@ int main(int argc, char *argv[])
     }
 
     port = atoi(argv[1]);
-
-    server_sock = tcp_create_and_listen(port);
+    server_sock = tcp_create_and_listen(port); // THIS IS MOST LIKELY CORRECT SINCE I CAN CREATE A PROXY
     if (server_sock < 0)
         exit(-1);
 
@@ -294,6 +294,7 @@ int main(int argc, char *argv[])
             perror("select");
             exit(1);
         }
+        printf("I am now here\n");
 
         for (i = 0; i <= fd_max; i++)
         {
@@ -302,7 +303,7 @@ int main(int argc, char *argv[])
                 if (i == server_sock)
                 {
                     // New connection on the server socket
-                    new_client_sock = handle_new_client(server_sock, "filename.xml", clientList);
+                    new_client_sock = handle_new_client(server_sock, "A.xml", clientList);
                     FD_SET(new_client_sock, &master_fds);
                     if (new_client_sock > fd_max)
                     {

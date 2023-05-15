@@ -32,17 +32,14 @@ int check_error(int res, char *msg)
 
 int tcp_connect(char *hostname, int port)
 {
+    printf("I AM IN TCP CONNECT\n");
     int socket_fd, rc;
     struct addrinfo hints, *res, *resp;
     char servname[6];
 
     sprintf(servname, "%d", port);
 
-    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    check_error(socket_fd, "socket");
-
-    memset(&hints, 0, sizeof(struct addrinfo)); // to ensure that any unused or garbage memory locations
-    // are set to a known value
+    memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
@@ -55,14 +52,33 @@ int tcp_connect(char *hostname, int port)
 
     for (resp = res; resp != NULL; resp = resp->ai_next)
     {
+        socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (socket_fd == -1) {
+            perror("socket");
+            continue;
+        }
+
         rc = connect(socket_fd, resp->ai_addr, resp->ai_addrlen);
-        check_error(rc, "connect");
+        if (rc == 0) {
+            break;  // successfully connected
+        } else {
+            perror("connect");
+            close(socket_fd);  // close the socket and try the next
+        }
     }
+
+    if (resp == NULL) {
+        fprintf(stderr, "failed to connect\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Do i get here?\n");
 
     freeaddrinfo(res);
 
     return socket_fd;
 }
+
 
 int tcp_read(int sock, char *buffer, int n)
 {

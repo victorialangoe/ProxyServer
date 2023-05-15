@@ -3,7 +3,10 @@
         "__availability": "c",
         "string": "c",
         "linkedlist.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "stdlib.h": "c",
+        "unistd.h": "c",
+        "ioctl.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

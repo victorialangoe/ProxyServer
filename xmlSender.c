@@ -28,6 +28,7 @@ static int getPort( char* arg );
 
 int main( int argc, char* argv[] )
 {
+    printf("MAIN IN XML\n"); // I NEVER GET HERE
     char* proxyip;
     int   proxyport;
     int sock;
@@ -46,8 +47,10 @@ int main( int argc, char* argv[] )
     proxyip   = argv[2];
     proxyport = getPort( argv[3] );
 
+    printf( "XML sender %c connecting to proxy at %s:%d\n", myid, proxyip, proxyport );
     sock = tcp_connect( proxyip, proxyport );
     if( sock < 0 ) exit( -1 );
+    printf( "Did I get here?" );
 
     /* Send one byte to the proxy to identify this sender as an XML sender. */
     err = tcp_write( sock, "X", 1 );
@@ -138,4 +141,3 @@ static int getPort( char* arg )
     }
     return port;
 }
-
