@@ -41,7 +41,6 @@ int main( int argc, char* argv[] )
     char myid;
     char mytype;
     int sleeptime;
-    printf("MAIN IN anyReceiver\n"); 
 
     if( argc != 6 )
     {
@@ -86,10 +85,12 @@ int main( int argc, char* argv[] )
         FD_ZERO( &fdset );
         FD_SET( sock, &fdset );
         err = tcp_wait_timeout( &fdset, sock+1, sleeptime );
+        printf( "err = %d\n", err );
 
         if( FD_ISSET( sock, &fdset ) )
         {
             ct = tcp_read( sock, line, 10000 );
+            printf( "ct = %d\n", ct );
             if( ct > 0 )
             {
                 fprintf( stderr, "%s:%d %s %c has read %d bytes from socket\n", __FILE__, __LINE__, argv[0], myid, ct );
@@ -106,6 +107,8 @@ int main( int argc, char* argv[] )
 
                 fflush( file );
             }
+        } else{
+            printf("its not set\n");
         }
     }
     while( err > 0 );

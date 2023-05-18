@@ -18,6 +18,7 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <sys/time.h>
 // TODO: remove unused imports
 
 int check_error(int res, char *msg)
@@ -32,7 +33,6 @@ int check_error(int res, char *msg)
 
 int tcp_connect(char *hostname, int port)
 {
-    printf("I AM IN TCP CONNECT\n");
     int socket_fd, rc;
     struct addrinfo hints, *res, *resp;
     char servname[6];
@@ -53,32 +53,34 @@ int tcp_connect(char *hostname, int port)
     for (resp = res; resp != NULL; resp = resp->ai_next)
     {
         socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (socket_fd == -1) {
+        if (socket_fd == -1)
+        {
             perror("socket");
             continue;
         }
 
         rc = connect(socket_fd, resp->ai_addr, resp->ai_addrlen);
-        if (rc == 0) {
-            break;  // successfully connected
-        } else {
+        if (rc == 0)
+        {
+            break; // successfully connected
+        }
+        else
+        {
             perror("connect");
-            close(socket_fd);  // close the socket and try the next
+            close(socket_fd); // close the socket and try the next
         }
     }
 
-    if (resp == NULL) {
+    if (resp == NULL)
+    {
         fprintf(stderr, "failed to connect\n");
         exit(EXIT_FAILURE);
     }
-
-    printf("Do i get here?\n");
 
     freeaddrinfo(res);
 
     return socket_fd;
 }
-
 
 int tcp_read(int sock, char *buffer, int n)
 {
@@ -145,16 +147,17 @@ int tcp_wait(fd_set *waiting_set, int wait_end)
 {
     int rc = select(wait_end + 1, waiting_set, NULL, NULL, NULL);
     check_error(rc, "select");
-
     return rc;
 }
 
-int tcp_wait_timeout(fd_set *waiting_set, int wait_end, int seconds)
+int tcp_wait_timeout(fd_set *waiting_set, int wait_end, int timeout)
 {
-    struct timeval timeval;
-    timeval.tv_sec = seconds;
-    int rc = select(wait_end + 1, waiting_set, NULL, NULL, &timeval);
-    check_error(rc, "select");
+    struct timeval wait_time;
+    wait_time.tv_sec = timeout;
+    wait_time.tv_usec = 0;
 
+    int rc = select(wait_end + 1, waiting_set, NULL, NULL, &wait_time);
+    check_error(rc, "select");
     return rc;
 }
+

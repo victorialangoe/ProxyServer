@@ -21,25 +21,15 @@ struct ClientList *create_client_list()
     return list;
 }
 
-int check_format_type(char *filename)
+int check_format_type(char first_char)
 {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL)
+    if (first_char == '<')
     {
-        printf("Could not open file%s\n", filename);
-        exit(EXIT_FAILURE);
-    }
-
-    int symbol = fgetc(file);
-    fclose(file);
-
-    if (symbol == '<')
-    {
-        return 1;
+        return 1; // XML format
     }
     else
     {
-        return 0;
+        return 0; // binary format
     }
 }
 

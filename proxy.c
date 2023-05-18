@@ -15,6 +15,7 @@
 #include <string.h>
 
 typedef struct Client Client;
+#define BUFFER_SIZE 1024
 
 void usage(char *cmd)
 {
@@ -27,52 +28,6 @@ void usage(char *cmd)
     exit(-1);
 }
 
-int extract_dest_id_from_file_content(char *content, int format_type)
-{
-    int dest_id = -1;
-    if (format_type == 1) // XML format
-    {
-        char *start = strstr(content, "<dest=");
-        if (start != NULL)
-        {
-            start += 6;
-            dest_id = *start;
-        }
-    }
-    else if (format_type == 0) // Binary format
-    {
-        if ((content[0] & 0x02) != 0) // Check if the 'has_dest' flag is set
-        {
-            dest_id = content[2];
-        }
-    }
-
-    return dest_id;
-}
-
-char extract_source_from_file_content(char *content, int format_type)
-{
-    char source = '\0';
-    if (format_type == 1) // XML format
-    {
-        char *start = strstr(content, "<source=");
-        if (start != NULL)
-        {
-            start += 9; // Move 9 characters ahead to reach the value of the source attribute
-            source = *start;
-        }
-    }
-    else if (format_type == 0) // Binary format
-    {
-        if ((content[0] & 0x01) != 0) // Check if the 'has_source' flag is set
-        {
-            source = content[1];
-        }
-    }
-
-    return source;
-}
-
 /*
  * This function is called when a new connection is noticed on the server
  * socket.
@@ -80,37 +35,59 @@ char extract_source_from_file_content(char *content, int format_type)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-int handle_new_client(int server_sock, char *filename, struct ClientList *list)
+int handle_new_client(int server_sock, struct ClientList *list)
 {
+
+    printf("handle_new_client\n");
     Client *client = malloc(sizeof(Client));
     if (client == NULL)
     {
-        fprintf(stderr, "Failed to allocate memory to a new client.\n");
+        fprintf(stderr, "Failed to allocate memory for a new client.\n");
         return -1;
     }
+
     struct sockaddr_in client_address;
     socklen_t client_len = sizeof(client_address);
     int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client_address, &client_len);
-    int format_type = check_format_type(filename);
 
-    char buffer[1024];
-
-    int dest_id = extract_dest_id_from_file_content(buffer, format_type);
-    char source = extract_source_from_file_content(buffer, format_type);
-
-    if (source != '\0' && dest_id != -1)
+    if (client_sock == -1)
     {
-        client->source = source;
-        client->dest_id = dest_id;
-        client->format_type = format_type;
-        insert(list, client);
+        fprintf(stderr, "Failed to accept a new client.\n");
+        free(client);
+        return -1;
     }
-    else
+
+    // Initialize the client
+    client->socket_fd = client_sock;
+    client->source = 0;  // source is not known yet
+    client->dest_id = 0; // destination is not known yet
+
+    char format_buffer[BUFFER_SIZE];
+    int format_received = 0;
+    while (format_received <= 0)
     {
-        // Handle the case when there's no 'source' or 'dest' in the file content
-        // You can add your code here
-        free(client); // Don't forget to free the memory if you don't insert the client into the list.
+        format_received = tcp_read(client_sock, format_buffer, sizeof(format_buffer));
+        if (format_received < 0)
+        {
+            fprintf(stderr, "Failed to read format from a new client.\n");
+            close(client_sock);
+            free(client);
+            return -1;
+        }
     }
+    for (int i = 0; i < format_received; i++)
+    {
+        printf("%02x ", format_buffer[i]);
+    }
+    printf("\n");
+
+    client->format_type = check_format_type(format_buffer[0]);
+    printf("format type: %d\n", client->format_type);
+    printf("tcp_read returned: %d\n", format_received);
+    sleep(10);
+
+    // Add the client to the list
+    insert(list, client);
 
     return client_sock;
 }
@@ -148,13 +125,13 @@ void remove_client(Client *client, struct ClientList *list)
  */
 void forward_message(Record *msg, struct ClientList *list)
 {
-    // Find the client with the matching dest_id
-    Client *client = find_client_by_id(list, msg->dest);
+    // Find the client with the matching source
+    Client *client = find_client_by_id(list, msg->source);
 
     // If the client is not found, discard the Record
     if (client == NULL)
     {
-        fprintf(stderr, "No client found with that destination id: %d\n", msg->dest);
+        fprintf(stderr, "No client found with that source id: %c\n", msg->source);
         deleteRecord(msg);
         return;
     }
@@ -169,7 +146,6 @@ void forward_message(Record *msg, struct ClientList *list)
     }
     else // Binary format
     {
-        // Modify the recordToBinary function to match the return type and arguments of recordToXML
         buffer = recordToBinary(msg, &bufSize);
     }
 
@@ -187,7 +163,6 @@ void forward_message(Record *msg, struct ClientList *list)
         fprintf(stderr, "Failed to send the complete message to the client.\n");
     }
 
-    // Delete the Record and free the buffer before returning
     deleteRecord(msg);
     free(buffer);
 }
@@ -210,8 +185,10 @@ void forward_message(Record *msg, struct ClientList *list)
  */
 void handle_client(Client *client, struct ClientList *list)
 {
+    printf("DO I GET HERE?\n");
     char buffer[1024];
     int bytesRead = tcp_read(client->socket_fd, buffer, sizeof(buffer));
+    printf("bytesRead: %d\n", bytesRead);
 
     if (bytesRead > 0)
     {
@@ -222,7 +199,7 @@ void handle_client(Client *client, struct ClientList *list)
         {
             msg = XMLtoRecord(buffer, bytesRead, &bytesReadForFormat);
         }
-        else // Binary format, maybe write format_type == 0 in an else if block?
+        else
         {
             msg = BinaryToRecord(buffer, bytesRead, &bytesReadForFormat);
         }
@@ -243,13 +220,12 @@ void handle_client(Client *client, struct ClientList *list)
     }
     else
     {
-        // Handle read error
+        fprintf(stderr, "Error reading from a client socket.\n");
     }
 }
 
 int main(int argc, char *argv[])
 {
-    printf("MAIN IN PROXY\n"); // I SEE THIS IN THE XTERM
     int port;
     int server_sock;
 
@@ -259,7 +235,7 @@ int main(int argc, char *argv[])
     }
 
     port = atoi(argv[1]);
-    server_sock = tcp_create_and_listen(port); // THIS IS MOST LIKELY CORRECT SINCE I CAN CREATE A PROXY
+    server_sock = tcp_create_and_listen(port);
     if (server_sock < 0)
         exit(-1);
 
@@ -269,50 +245,38 @@ int main(int argc, char *argv[])
     fd_set master_fds, read_fds;
     int fd_max;
     int new_client_sock;
-    int i;
 
     FD_ZERO(&master_fds);
     FD_ZERO(&read_fds);
     FD_SET(server_sock, &master_fds);
     fd_max = server_sock;
+    printf("Waiting for connections...\n");
 
-    /*
-     * The following part is the event loop of the proxy. It waits for new connections,
-     * new data arriving on existing connection, and events that indicate that a client
-     * has disconnected.
-     *
-     * This function uses handleNewClient() when activity is seen on the server socket
-     * and handleClient() when activity is seen on the socket of an existing connection.
-     *
-     * The loops ends when no clients are connected any more.
-     */
     do
     {
         read_fds = master_fds;
-        if (select(fd_max + 1, &read_fds, NULL, NULL, NULL) == -1)
-        {
-            perror("select");
-            exit(1);
-        }
-        printf("I am now here\n");
+        tcp_wait(&read_fds, fd_max);
 
-        for (i = 0; i <= fd_max; i++)
+        for (int i = 0; i <= fd_max; i++)
         {
-            if (FD_ISSET(i, &read_fds))
+            if (FD_ISSET(i, &master_fds) && FD_ISSET(i, &read_fds))
             {
+                printf("New activity on socket %d\n", i);
                 if (i == server_sock)
                 {
                     // New connection on the server socket
-                    new_client_sock = handle_new_client(server_sock, "A.xml", clientList);
+                    printf("New connection on the server socket\n");
+                    new_client_sock = handle_new_client(server_sock, clientList);
+                    printf("New client socket: %d\n", new_client_sock);
                     FD_SET(new_client_sock, &master_fds);
                     if (new_client_sock > fd_max)
                     {
+                        printf("Updating fd_max\n");
                         fd_max = new_client_sock;
                     }
                 }
                 else
                 {
-                    // Activity on an existing client's socket
                     Client *client = find_client_by_id(clientList, i);
                     if (client != NULL)
                     {

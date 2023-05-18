@@ -10,8 +10,8 @@
 #include "recordFromFormat.h"
 #include <stdio.h>
 #include <string.h>
-#include <libxml/parser.h>
 #include "record.h"
+#include <stdlib.h>
 
 int getCourseCode(char *course)
 {

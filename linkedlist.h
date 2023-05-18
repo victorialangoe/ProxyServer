@@ -11,7 +11,7 @@ struct ClientList
 
 struct ClientList *create_client_list();
 
-int check_format_type(char *filename);
+int check_format_type(char first_char);
 
 void insert(struct ClientList *list, struct Client *client);
 
