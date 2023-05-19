@@ -206,8 +206,6 @@ void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
 
         if (msg != NULL)
         {
-            printRecordAsXML(msg);
-            printSourceAndDest(msg);
             forward_message(msg, list, format_type);
         }
         else
