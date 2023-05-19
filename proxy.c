@@ -75,16 +75,6 @@ int handle_new_client(int server_sock, struct ClientList *list)
             return -1;
         }
     }
-    for (int i = 0; i < format_received; i++)
-    {
-        printf("%02x ", format_buffer[i]);
-    }
-    printf("\n");
-
-    client->format_type = check_format_type(format_buffer[0]);
-    printf("format type: %d\n", client->format_type);
-    printf("tcp_read returned: %d\n", format_received);
-    sleep(10);
 
     // Add the client to the list
     insert(list, client);
@@ -99,11 +89,21 @@ int handle_new_client(int server_sock, struct ClientList *list)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void remove_client(Client *client, struct ClientList *list)
+void remove_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
+    FD_CLR(client->socket_fd, master_fds); // add this line to remove the file descriptor from the master set
     remove_node(list, client->source);
     tcp_close(client->socket_fd);
     memset(client, 0, sizeof(Client));
+}
+
+void printSourceAndDest(Record *record)
+{
+    if (record != NULL)
+    {
+        printf("Source: %c\n", record->source);
+        printf("Destination: %c\n", record->dest);
+    }
 }
 
 /*
@@ -123,15 +123,15 @@ void remove_client(Client *client, struct ClientList *list)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void forward_message(Record *msg, struct ClientList *list)
+void forward_message(Record *msg, struct ClientList *list, int format_type)
 {
     // Find the client with the matching source
-    Client *client = find_client_by_id(list, msg->source);
+    Client *client = find_client_by_socket(list, msg->source);
 
     // If the client is not found, discard the Record
     if (client == NULL)
     {
-        fprintf(stderr, "No client found with that source id: %c\n", msg->source);
+        fprintf(stderr, "No client found with that source id in forward_message: %c\n", msg->source);
         deleteRecord(msg);
         return;
     }
@@ -140,7 +140,7 @@ void forward_message(Record *msg, struct ClientList *list)
     char *buffer;
     int bufSize = 0;
 
-    if (client->format_type == 1) // XML format
+    if (format_type == 1) // XML format
     {
         buffer = recordToXML(msg, &bufSize);
     }
@@ -183,19 +183,19 @@ void forward_message(Record *msg, struct ClientList *list)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void handle_client(Client *client, struct ClientList *list)
+void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
-    printf("DO I GET HERE?\n");
-    char buffer[1024];
+    char buffer[BUFFER_SIZE];
     int bytesRead = tcp_read(client->socket_fd, buffer, sizeof(buffer));
-    printf("bytesRead: %d\n", bytesRead);
+    int format_type = check_format_type(buffer, bytesRead);
+    printf("format type: %d\n", format_type);
 
     if (bytesRead > 0)
     {
         Record *msg = NULL;
         int bytesReadForFormat = sizeof(sizeof(buffer));
 
-        if (client->format_type == 1) // XML format
+        if (format_type == 1) // XML format
         {
             msg = XMLtoRecord(buffer, bytesRead, &bytesReadForFormat);
         }
@@ -206,21 +206,20 @@ void handle_client(Client *client, struct ClientList *list)
 
         if (msg != NULL)
         {
-            forward_message(msg, list);
+            printRecordAsXML(msg);
+            printSourceAndDest(msg);
+            forward_message(msg, list, format_type);
         }
         else
         {
             fprintf(stderr, "Error converting the received data to a Record.\n");
         }
     }
-    else if (bytesRead == 0)
+    else // bytesRead == 0 or bytesRead == -1
     {
+        printf("Removing client\n");
         remove_node(list, client->source);
-        remove_client(client, list);
-    }
-    else
-    {
-        fprintf(stderr, "Error reading from a client socket.\n");
+        remove_client(client, list, master_fds); // pass master_fds here
     }
 }
 
@@ -256,31 +255,33 @@ int main(int argc, char *argv[])
     {
         read_fds = master_fds;
         tcp_wait(&read_fds, fd_max);
+        printf("Currently %d client(s) connected.\n", clientList->size);
 
         for (int i = 0; i <= fd_max; i++)
         {
-            if (FD_ISSET(i, &master_fds) && FD_ISSET(i, &read_fds))
+            if (FD_ISSET(i, &read_fds)) // changed this from master_fds to read_fds
             {
-                printf("New activity on socket %d\n", i);
                 if (i == server_sock)
                 {
                     // New connection on the server socket
-                    printf("New connection on the server socket\n");
                     new_client_sock = handle_new_client(server_sock, clientList);
-                    printf("New client socket: %d\n", new_client_sock);
                     FD_SET(new_client_sock, &master_fds);
                     if (new_client_sock > fd_max)
                     {
-                        printf("Updating fd_max\n");
                         fd_max = new_client_sock;
                     }
                 }
                 else
                 {
-                    Client *client = find_client_by_id(clientList, i);
+                    printf("Handling client\n");
+                    Client *client = find_client_by_socket(clientList, i);
                     if (client != NULL)
                     {
-                        handle_client(client, clientList);
+                        handle_client(client, clientList, &master_fds);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "No client found with that socket id in main proxy: %d\n", i);
                     }
                 }
             }

@@ -85,7 +85,6 @@ int main( int argc, char* argv[] )
         FD_ZERO( &fdset );
         FD_SET( sock, &fdset );
         err = tcp_wait_timeout( &fdset, sock+1, sleeptime );
-        printf( "err = %d\n", err );
 
         if( FD_ISSET( sock, &fdset ) )
         {
