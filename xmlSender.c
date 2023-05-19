@@ -75,7 +75,6 @@ int main( int argc, char* argv[] )
             if( err == 1 )
             {
                 fprintf( stderr, "%s:%d read sleep command, sleeping for %d seconds\n", __FILE__, __LINE__, sleeptime );
-                printf("I am here if err == 1\n");
                 sleep( sleeptime );
             }
             else
