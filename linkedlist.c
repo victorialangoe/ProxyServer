@@ -21,17 +21,16 @@ struct ClientList *create_client_list()
     return list;
 }
 
-int check_format_type(char first_char)
+int check_format_type(char *buffer, int len)
 {
-    if (first_char == '<')
-    {
-        return 1; // XML format
+    for(int i = 0; i < len; i++) {
+        if ((unsigned char)buffer[i] == '<') {
+            return 1; // XML format
+        }
     }
-    else
-    {
-        return 0; // binary format
-    }
+    return 0; // binary format
 }
+
 
 void insert(struct ClientList *list, struct Client *client)
 {
@@ -65,12 +64,12 @@ void remove_node(struct ClientList *list, int source)
     list->size--;
 }
 
-struct Client *find_client_by_id(struct ClientList *list, int source)
+struct Client *find_client_by_socket(struct ClientList *list, int socket_id)
 {
     struct Client *tmp = list->head;
     while (tmp != NULL)
     {
-        if (tmp->source == source)
+        if (tmp->socket_fd == socket_id)
         {
             return tmp;
         }

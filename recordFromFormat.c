@@ -12,6 +12,7 @@
 #include <string.h>
 #include "record.h"
 #include <stdlib.h>
+#include <math.h>
 
 int getCourseCode(char *course)
 {
@@ -67,6 +68,7 @@ int getCourseCode(char *course)
 
 Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
 {
+    printf("XMLtoRecord\n");
     Record *record = newRecord();
     if (record == NULL)
     {
@@ -78,6 +80,12 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
     char *start = buffer;
     char *end = buffer + bufSize;
     int have_grade = 0;
+    for (int i = 0; i < bufSize; i++)
+    {
+        printf("%02X ", (unsigned char)buffer[i]);
+    }
+    printf("\n");
+    printf("size of buffer: %d\n", bufSize);
 
     if (start == NULL || end == NULL)
     {
@@ -86,84 +94,64 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
 
     while (start < end)
     {
-        if (strncmp(start, "<source=", 8) == 0)
+        if (strncmp(start, "<sleep=\"", 8) == 0)
         {
-            start += 8;
-            setSource(record, *start);
-            start += 3;
+            start = strchr(start, '>') + 1; // skip to the end of sleep tag
         }
-        else if (strncmp(start, "<dest=", 6) == 0)
-        {
-            start += 6;
-            setDest(record, *start);
-            start += 3;
-        }
-        else if (strncmp(start, "<username=", 10) == 0)
-        {
-            start += 10;
-            char *username = NULL;
-            sscanf(start, "\"%m[^\"]\"", &username);
-            setUsername(record, username);
-            free(username);
-            start += strlen(record->username) + 2;
-        }
-        else if (strncmp(start, "<id", 4) == 0)
-        {
-            start += 4;
-            uint32_t id = 0;
-            sscanf(start, "\"%u\"", &id);
-            setId(record, id);
-            start += strlen(start) + 1;
-        }
-        else if (strncmp(start, "<group=", 7) == 0)
-        {
-            start += 7;
-            uint32_t group = 0;
-            sscanf(start, "\"%u\"", &group);
-            setGroup(record, group);
-            start += strlen(start) + 1;
-        }
-        else if (strncmp(start, "<grade=", 7) == 0)
-        {
-            have_grade = 1;
-            start += 7;
-            if (strncmp(start, "PhD", 3) == 0)
-            {
-                setGrade(record, Grade_PhD);
-                start += 3;
-            }
-            else if (strncmp(start, "Master", 3) == 0)
-            {
-                setGrade(record, Grade_Master);
-                start += 3;
-            }
-            else if (strncmp(start, "Bachelor", 3) == 0)
-            {
-                setGrade(record, Grade_Bachelor);
-                start += 3;
-            }
-        }
-        else if (strncmp(start, "<course=", 8) == 0)
+        else if (strncmp(start, "<source=\"", 9) == 0)
         {
             start += 9;
-            while (strncmp(start, "</courses>", 10) != 0)
-            {
-                char course[8] = "";
-                sscanf(start, "\"%7[^\"]\"", course);
-                start += strlen(course) + 4;
-                int courseCode = getCourseCode(course);
-                if (courseCode == 0)
-                {
-                    break;
-                }
-                setCourse(record, courseCode);
-            }
+            char source = *(start);
+            setSource(record, source);
+            start += 3;
         }
-        else
+        else if (strncmp(start, "<dest=\"", 7) == 0)
         {
-            start = strchr(start, '>') + 1;
+            start += 7;
+            char dest = *(start);
+            setDest(record, dest);
+            start += 3;
         }
+        else if (strncmp(start, "<username=\"", 12) == 0)
+        {
+            start += 12;
+            char *username = NULL;
+            sscanf(start, "%m[^\"]\"", &username);
+            setUsername(record, username);
+            free(username);
+            start += strlen(record->username) + 3;
+        }
+        else if (strncmp(start, "<id=\"", 6) == 0)
+        {
+            start += 6;
+            uint32_t id = 0;
+            int n;
+            sscanf(start, "%u%n\"", &id, &n);
+            setId(record, id);
+            start += n + 2;
+        }
+        else if (strncmp(start, "<group=\"", 9) == 0)
+        {
+            start += 9;
+            uint32_t group = 0;
+            int n;
+            sscanf(start, "%u%n\"", &group, &n);
+            setGroup(record, group);
+            start += n + 2;
+        }
+        else if (strncmp(start, "<semester=\"", 12) == 0)
+        {
+            start += 12;
+            uint32_t semester = 0;
+            int n;
+            sscanf(start, "%u%n\"", &semester, &n);
+            setSemester(record, semester);
+            start += n + 2;
+        }
+
+        // Similar changes for grade and course handling...
     }
+
     if (!have_grade)
     {
         setGrade(record, Grade_None);

@@ -93,7 +93,7 @@ int tcp_read(int sock, char *buffer, int n)
 
 int tcp_write(int sock, char *buffer, int bytes)
 {
-    int wc = write(sock, &buffer, bytes);
+    int wc = write(sock, buffer, bytes);
     check_error(wc, "write");
     return wc;
 }
@@ -101,9 +101,9 @@ int tcp_write(int sock, char *buffer, int bytes)
 int tcp_write_loop(int sock, char *buffer, int bytes)
 {
     int wc = 0;
-    while (wc < bytes + 1)
+    while (wc < bytes)
     {
-        wc += write(sock, &buffer, bytes - wc);
+        wc += write(sock, buffer + wc, bytes - wc);
         check_error(wc, "write");
     }
     return wc;
@@ -160,4 +160,3 @@ int tcp_wait_timeout(fd_set *waiting_set, int wait_end, int timeout)
     check_error(rc, "select");
     return rc;
 }
-
