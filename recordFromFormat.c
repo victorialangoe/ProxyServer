@@ -13,6 +13,8 @@
 #include "record.h"
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 int getCourseCode(char *course)
 {
@@ -71,7 +73,7 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
     Record *record = newRecord();
     if (record == NULL)
     {
-        fprintf(stderr, "Failed to allocate memory.\n");
+        fprintf(stderr, "Failed to allocate memory for a Record.\n");
         return NULL;
     }
 
@@ -218,7 +220,7 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
             start++;
         }
     }
-    // clearRecord(record); dont know if this is needed
+    clearRecord(record);
     return record;
 }
 
@@ -232,78 +234,122 @@ Record *BinaryToRecord(char *buffer, int bufSize, int *bytesread)
         return NULL;
     }
 
-    memset(record, 0, sizeof(Record));
+    initRecord(record);
+
     char *start = buffer;
     char *end = buffer + bufSize;
+
+    if (start == NULL || end == NULL)
+    {
+        return NULL;
+    }
+
     uint8_t flags = *start++;
-    int have_grade = 0;
+    *bytesread = 1;
 
-    while (start < end)
+    if (flags & FLAG_SRC)
     {
-        if (flags & 0x01)
+        if (start + 1 > end)
         {
-            setSource(record, *start);
-            start++;
-            flags &= ~0x01;
+            return NULL;
         }
-        else if (flags & 0x02)
-        {
-            setDest(record, *start);
-            start++;
-            flags &= ~0x02;
-        }
-        else if (flags & 0x04)
-        {
-            uint32_t username_len = ntohl(*(uint32_t *)(start));
-            start += sizeof(uint32_t);
-            setUsername(record, start);
-            start += username_len;
-            flags &= ~0x04;
-        }
-        else if (flags & 0x08)
-        {
-            uint32_t id = ntohl(*(uint32_t *)(start));
-            setId(record, id);
-            start += sizeof(uint32_t);
-            flags &= ~0x08;
-        }
-        else if (flags & 0x10)
-        {
-            uint32_t group = ntohl(*(uint32_t *)(start));
-            setGroup(record, group);
-            start += sizeof(uint32_t);
-            flags &= ~0x10;
-        }
-        else if (flags & 0x20)
-        {
-            setSemester(record, *start);
-            start++;
-            flags &= ~0x20;
-        }
-        else if (flags & 0x40)
-        {
-            have_grade = 1;
-            Grade grade = (Grade)(*start++);
-            setGrade(record, grade);
-            flags &= ~0x40;
-        }
-        else if (flags & 0x80)
-        {
-            uint16_t courses = ntohs(*(uint16_t *)(start));
-            setCourse(record, courses);
-            start += sizeof(uint16_t);
-            flags &= ~0x80;
-        }
-        else
-        {
-            break;
-        }
+        setSource(record, *start);
+        start++;
+        (*bytesread)++;
     }
 
-    if (!have_grade)
+    if (flags & FLAG_DST)
     {
-        setGrade(record, Grade_None);
+        if (start + 1 > end)
+        {
+            return NULL;
+        }
+        setDest(record, *start);
+        start++;
+        (*bytesread)++;
     }
 
+    if (flags & FLAG_USERNAME)
+    {
+        if (start + sizeof(uint32_t) > end)
+        {
+            return NULL;
+        }
+        uint32_t username_len = ntohl(*(uint32_t *)(start));
+        start += sizeof(uint32_t);
+        (*bytesread) += sizeof(uint32_t);
+
+        if (start + username_len > end)
+        {
+            return NULL;
+        }
+        char *username = malloc(username_len + 1);
+        memcpy(username, start, username_len);
+        username[username_len] = '\0';
+        setUsername(record, username);
+        start += username_len;
+        (*bytesread) += username_len;
+        free(username);
+    }
+
+    if (flags & FLAG_ID)
+    {
+        if (start + sizeof(uint32_t) > end)
+        {
+            return NULL;
+        }
+        uint32_t id = ntohl(*(uint32_t *)(start));
+        setId(record, id);
+        start += sizeof(uint32_t);
+        (*bytesread) += sizeof(uint32_t);
+    }
+
+    if (flags & FLAG_GROUP)
+    {
+        if (start + sizeof(uint32_t) > end)
+        {
+            return NULL;
+        }
+        uint32_t group = ntohl(*(uint32_t *)(start));
+        setGroup(record, group);
+        start += sizeof(uint32_t);
+        (*bytesread) += sizeof(uint32_t);
+    }
+
+    if (flags & FLAG_SEMESTER)
+    {
+        if (start + 1 > end)
+        {
+            return NULL;
+        }
+        setSemester(record, *start);
+        start++;
+        (*bytesread)++;
+    }
+
+    if (flags & FLAG_GRADE)
+    {
+        if (start + 1 > end)
+        {
+            return NULL;
+        }
+        Grade grade = (Grade)(*start++);
+        setGrade(record, grade);
+        (*bytesread)++;
+    }
+
+    if (flags & FLAG_COURSES)
+    {
+        if (start + sizeof(uint16_t) > end)
+        {
+            return NULL;
+        }
+        uint16_t courses = ntohs(*(uint16_t *)(start));
+        record->has_courses = true;
+        record->courses = courses;
+        start += sizeof(uint16_t);
+        (*bytesread) += sizeof(uint16_t);
+    }
+    clearRecord(record);
     return record;
 }

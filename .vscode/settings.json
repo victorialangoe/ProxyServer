@@ -6,7 +6,8 @@
         "string.h": "c",
         "stdlib.h": "c",
         "unistd.h": "c",
-        "ioctl.h": "c"
+        "ioctl.h": "c",
+        "ostream": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
