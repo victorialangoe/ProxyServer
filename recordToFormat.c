@@ -123,6 +123,7 @@ void printRecordAsXML( Record* r )
 
 char* recordToBinary( Record* r, int* bufSize )
 {
+    printf( "recordToBinary\n" ); // this is never printed for the second record
     uint8_t flags;
     flags = 0;
     if( r->has_source )   flags |= FLAG_SRC;
