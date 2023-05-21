@@ -80,7 +80,6 @@ int main( int argc, char* argv[] )
             else
             {
                 err = tcp_write_loop( sock, line, ct );
-                printf("err = %d\n", err);
                 if( err < 0 ) exit( -1 );
                 fprintf( stderr, "%s:%d %s %c has sent %d bytes to proxy successfully\n", __FILE__, __LINE__, argv[0], myid, err );
             }
