@@ -99,7 +99,6 @@ void remove_client(Client *client, struct ClientList *list, fd_set *master_fds)
     remove_node(list, client->source);
     tcp_close(client->socket_fd);
     memset(client, 0, sizeof(Client));
-    free(client);
 }
 
 /*
@@ -125,8 +124,6 @@ void forward_message(Record *msg, struct ClientList *list)
     if (client == NULL)
     {
         fprintf(stderr, "No client found for destination: %c\n", msg->dest);
-        free(client);
-        deleteRecord(msg);
         return;
     }
 
@@ -137,8 +134,6 @@ void forward_message(Record *msg, struct ClientList *list)
     else
     {
         fprintf(stderr, "forward_message: no destination\n");
-        deleteRecord(msg);
-        free(client);
         return;
     }
 
@@ -164,7 +159,6 @@ void forward_message(Record *msg, struct ClientList *list)
     {
         fprintf(stderr, "Error converting the Record to the required format.\n");
         deleteRecord(msg);
-        free(buffer);
         return;
     }
 
@@ -176,9 +170,7 @@ void forward_message(Record *msg, struct ClientList *list)
         fprintf(stderr, "Failed to send the complete message to the client.\n");
     }
 
-    free(client);
     deleteRecord(msg);
-    free(buffer);
 }
 
 /*
@@ -199,11 +191,8 @@ void forward_message(Record *msg, struct ClientList *list)
  */
 void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
-    printf("handle_client\n");
-
     char buffer[BUFFER_SIZE];
     int bytesRead = tcp_read(client->socket_fd, buffer, sizeof(buffer));
-    printf("bytesRead: %d\n", bytesRead);
     printf("client format type: %c\n", client->format_type);
 
     if (bytesRead > 0)
@@ -233,7 +222,6 @@ void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
         {
             fprintf(stderr, "Error converting the received data to a Record.\n");
         }
-        free(msg);
     }
     else
     {

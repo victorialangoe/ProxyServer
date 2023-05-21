@@ -220,7 +220,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
             start++;
         }
     }
-    clearRecord(record);
     return record;
 }
 
@@ -350,6 +349,5 @@ Record *BinaryToRecord(char *buffer, int bufSize, int *bytesread)
         start += sizeof(uint16_t);
         (*bytesread) += sizeof(uint16_t);
     }
-    clearRecord(record);
     return record;
 }
