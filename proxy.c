@@ -193,7 +193,6 @@ void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
     char buffer[BUFFER_SIZE];
     int bytesRead = tcp_read(client->socket_fd, buffer, sizeof(buffer));
-    printf("client format type: %c\n", client->format_type);
 
     if (bytesRead > 0)
     {

@@ -189,31 +189,38 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                 {
                     grade = Grade_PhD;
                 }
-                printf("grade: %d\n", grade);
                 setGrade(record, grade);
                 free(grade_str);
                 start = end_quote + 3;
             }
         }
-        else if (strstr(start, "<courses>") != NULL)
+        else if (strncmp(start, "<courses>", 9) == 0)
         {
-            start = strstr(start, "<courses>") + 9;
-            while (strstr(start, "<course=\"") != NULL)
+            start += 9; // Move past the <courses> tag
+            while (strncmp(start, "</courses>", 10) != 0 && start < end)
             {
-                start = strstr(start, "<course=\"") + 9;
-                char *end_quote = strchr(start, '"');
-                if (end_quote != NULL)
+                if (strncmp(start, "<course=\"", 9) == 0)
                 {
-                    int course_length = end_quote - start;
-                    char *course_str = malloc((course_length + 1) * sizeof(char));
-                    strncpy(course_str, start, course_length);
-                    course_str[course_length] = '\0';
-                    int course_code = getCourseCode(course_str);
-                    setCourse(record, course_code);
-                    free(course_str);
-                    start = end_quote + 4;
+                    start += 9; // Move past the <course=" tag
+                    char *end_quote = strchr(start, '"');
+                    if (end_quote != NULL)
+                    {
+                        int course_length = end_quote - start;
+                        char *course_str = malloc((course_length + 1) * sizeof(char));
+                        strncpy(course_str, start, course_length);
+                        course_str[course_length] = '\0';
+                        int course_code = getCourseCode(course_str);
+                        setCourse(record, course_code);
+                        free(course_str);
+                        start = end_quote + 4; // Move past the end quote and the closing tag "/>"
+                    }
+                }
+                else
+                {
+                    start++;
                 }
             }
+            start += 10; // Move past the </courses> tag
         }
         else
         {

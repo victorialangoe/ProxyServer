@@ -86,8 +86,6 @@ int tcp_read(int sock, char *buffer, int n)
 {
     int rc;
     rc = read(sock, buffer, n);
-    printf("read %d bytes\n", rc);
-    sleep(4);
     check_error(rc, "read");
 
     return rc;

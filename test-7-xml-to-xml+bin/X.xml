@@ -1,0 +1,14 @@
+<record>
+  <source="A" />
+  <dest="X" />
+  <username="wbepKnv" />
+  <grade="Master" />
+  <courses>
+    <course="IN1030" />
+    <course="IN1080" />
+    <course="IN1140" />
+    <course="IN1150" />
+    <course="IN1910" />
+  </courses>
+</record>
+
