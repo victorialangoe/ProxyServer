@@ -91,7 +91,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
         {
             start = strstr(start, "<source=\"") + 9; // Move to the start of the source value
             char source = *start;
-            printf("source: %c\n", source);
             setSource(record, source);
             start += 3; // Move past the source value and closing tag
         }
@@ -99,7 +98,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
         {
             start = strstr(start, "<dest=\"") + 7;
             char dest = *start;
-            printf("dest: %c\n", dest);
             setDest(record, dest);
             start += 3;
         }
@@ -113,7 +111,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                 char *username = malloc((username_length + 1) * sizeof(char)); // Allocate memory for the username string
                 strncpy(username, start, username_length);                     // Copy the username from the XML data
                 username[username_length] = '\0';                              // Add a null-terminating character
-                printf("username: %s\n", username);
                 setUsername(record, username);
                 free(username);        // Remember to free the allocated memory
                 start = end_quote + 3; // Move past the username value and closing tag
@@ -130,7 +127,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                 strncpy(id_str, start, id_length);
                 id_str[id_length] = '\0';
                 uint32_t id = atoi(id_str);
-                printf("id: %u\n", id);
                 setId(record, id);
                 free(id_str);
                 start = end_quote + 3;
@@ -147,7 +143,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                 strncpy(group_str, start, group_length);
                 group_str[group_length] = '\0';
                 uint32_t group = atoi(group_str);
-                printf("group: %u\n", group);
                 setGroup(record, group);
                 free(group_str);
                 start = end_quote + 3;
@@ -164,7 +159,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                 strncpy(semester_str, start, semester_length);
                 semester_str[semester_length] = '\0';
                 uint8_t semester = atoi(semester_str);
-                printf("semester: %u\n", semester);
                 setSemester(record, semester);
                 free(semester_str);
                 start = end_quote + 3;
@@ -213,7 +207,6 @@ Record *XMLtoRecord(char *buffer, int bufSize, int *bytesread)
                     strncpy(course_str, start, course_length);
                     course_str[course_length] = '\0';
                     int course_code = getCourseCode(course_str);
-                    printf("course: %s, course code: %d\n", course_str, course_code);
                     setCourse(record, course_code);
                     free(course_str);
                     start = end_quote + 4;

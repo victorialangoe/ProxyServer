@@ -101,10 +101,10 @@ int tcp_write(int sock, char *buffer, int bytes)
 int tcp_write_loop(int sock, char *buffer, int bytes)
 {
     int wc = 0;
-    while (wc < bytes)
+    int write;
+    while ((wc < bytes) && ((write = tcp_write(sock, &buffer[wc], bytes - wc)) > 0))
     {
-        wc += write(sock, buffer + wc, bytes - wc);
-        check_error(wc, "write");
+        wc = wc + write;
     }
     return wc;
 }

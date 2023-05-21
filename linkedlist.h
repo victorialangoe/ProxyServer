@@ -17,6 +17,8 @@ void insert(struct ClientList *list, struct Client *client);
 
 void remove_node(struct ClientList *list, int source);
 
+struct Client *find_client_by_source(struct ClientList *list, int source);
+
 struct Client *find_client_by_socket(struct ClientList *list, int socket_id);
 
 int get_client_format_type(struct ClientList *list, int source);

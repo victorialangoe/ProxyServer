@@ -16,6 +16,7 @@
 
 typedef struct Client Client;
 #define BUFFER_SIZE 1024
+struct ClientList *clientList = NULL;
 
 void usage(char *cmd)
 {
@@ -37,7 +38,6 @@ void usage(char *cmd)
  */
 int handle_new_client(int server_sock, struct ClientList *list)
 {
-
     printf("handle_new_client\n");
     Client *client = malloc(sizeof(Client));
     if (client == NULL)
@@ -50,23 +50,22 @@ int handle_new_client(int server_sock, struct ClientList *list)
     socklen_t client_len = sizeof(client_address);
     int client_sock = tcp_accept(server_sock, (struct sockaddr *)&client_address, &client_len);
 
-    if (client_sock == -1)
-    {
-        fprintf(stderr, "Failed to accept a new client.\n");
-        free(client);
-        return -1;
-    }
-
     // Initialize the client
     client->socket_fd = client_sock;
-    client->source = 0;  // source is not known yet
-    client->dest_id = 0; // destination is not known yet
+    client->source = 0;       // we check source later
+    client->format_type = -1; // we check the format type later
 
     char format_buffer[BUFFER_SIZE];
     int format_received = 0;
     while (format_received <= 0)
     {
         format_received = tcp_read(client_sock, format_buffer, sizeof(format_buffer));
+        if (format_received >= 2)
+        {
+            // Print the first two bytes as hexadecimal values
+            client->format_type = (unsigned char)format_buffer[0];
+            client->source = (unsigned char)format_buffer[1];
+        }
         if (format_received < 0)
         {
             fprintf(stderr, "Failed to read format from a new client.\n");
@@ -75,6 +74,8 @@ int handle_new_client(int server_sock, struct ClientList *list)
             return -1;
         }
     }
+    printf("client->format_type: %c\n", client->format_type);
+    printf("client->source: %c\n", client->source);
 
     // Add the client to the list
     insert(list, client);
@@ -91,19 +92,10 @@ int handle_new_client(int server_sock, struct ClientList *list)
  */
 void remove_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
-    FD_CLR(client->socket_fd, master_fds); // add this line to remove the file descriptor from the master set
+    FD_CLR(client->socket_fd, master_fds);
     remove_node(list, client->source);
     tcp_close(client->socket_fd);
     memset(client, 0, sizeof(Client));
-}
-
-void printSourceAndDest(Record *record)
-{
-    if (record != NULL)
-    {
-        printf("Source: %c\n", record->source);
-        printf("Destination: %c\n", record->dest);
-    }
 }
 
 /*
@@ -123,30 +115,34 @@ void printSourceAndDest(Record *record)
  *
  * *** The parameters and return values of this functions can be changed. ***
  */
-void forward_message(Record *msg, struct ClientList *list, int format_type)
+void forward_message(Record *msg, struct ClientList *list)
 {
-    // Find the client with the matching source
-    Client *client = find_client_by_socket(list, msg->source);
-
-    // If the client is not found, discard the Record
-    if (client == NULL)
+    Client *client = find_client_by_source(list, msg->dest);
+    if (msg->has_dest)
     {
-        fprintf(stderr, "No client found with that source id in forward_message: %c\n", msg->source);
-        deleteRecord(msg);
-        return;
+        fprintf(stderr, "forward_message to: %c\n", msg->dest);
     }
-
+    else
+    {
+        fprintf(stderr, "forward_message: no destination\n");
+    }
     // Convert the Record to the appropriate format
     char *buffer;
     int bufSize = 0;
 
-    if (format_type == 1) // XML format
+    if (client->format_type == 'X') // XML format
     {
         buffer = recordToXML(msg, &bufSize);
     }
-    else // Binary format
+    else if (client->format_type == 'B') // Binary format
     {
         buffer = recordToBinary(msg, &bufSize);
+    }
+    else
+    {
+        fprintf(stderr, "Unknown format type: %c\n", client->format_type);
+        deleteRecord(msg);
+        return;
     }
 
     if (bufSize <= 0)
@@ -157,7 +153,7 @@ void forward_message(Record *msg, struct ClientList *list, int format_type)
     }
 
     // Send the converted message to the client
-    int bytesSent = tcp_write(client->socket_fd, buffer, bufSize);
+    int bytesSent = tcp_write_loop(client->socket_fd, buffer, bufSize);
     if (bytesSent != bufSize)
     {
         fprintf(stderr, "Failed to send the complete message to the client.\n");
@@ -185,39 +181,43 @@ void forward_message(Record *msg, struct ClientList *list, int format_type)
  */
 void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
+
     char buffer[BUFFER_SIZE];
     int bytesRead = tcp_read(client->socket_fd, buffer, sizeof(buffer));
-    int format_type = check_format_type(buffer, bytesRead);
-    printf("format type: %d\n", format_type);
 
     if (bytesRead > 0)
     {
+
         Record *msg = NULL;
         int bytesReadForFormat = sizeof(sizeof(buffer));
 
-        if (format_type == 1) // XML format
+        if (client->format_type == 'X')
         {
             msg = XMLtoRecord(buffer, bytesRead, &bytesReadForFormat);
         }
-        else
+        else if (client->format_type == 'B')
         {
             msg = BinaryToRecord(buffer, bytesRead, &bytesReadForFormat);
+        }
+        else
+        {
+            fprintf(stderr, "Error: Format type was invalid\n");
         }
 
         if (msg != NULL)
         {
-            forward_message(msg, list, format_type);
+            forward_message(msg, list);
         }
         else
         {
             fprintf(stderr, "Error converting the received data to a Record.\n");
         }
     }
-    else // bytesRead == 0 or bytesRead == -1
+    else
     {
         printf("Removing client\n");
         remove_node(list, client->source);
-        remove_client(client, list, master_fds); // pass master_fds here
+        remove_client(client, list, master_fds);
     }
 }
 
@@ -234,10 +234,11 @@ int main(int argc, char *argv[])
     port = atoi(argv[1]);
     server_sock = tcp_create_and_listen(port);
     if (server_sock < 0)
+    {
         exit(-1);
+    }
 
-    /* add your initialization code */
-    struct ClientList *clientList = create_client_list();
+    clientList = create_client_list();
 
     fd_set master_fds, read_fds;
     int fd_max;
@@ -253,8 +254,8 @@ int main(int argc, char *argv[])
     {
         read_fds = master_fds;
         tcp_wait(&read_fds, fd_max);
-        printf("Currently %d client(s) connected.\n", clientList->size);
 
+        printf("Currently %d client(s) connected.\n", clientList->size);
         for (int i = 0; i <= fd_max; i++)
         {
             if (FD_ISSET(i, &read_fds)) // changed this from master_fds to read_fds
