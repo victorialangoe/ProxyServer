@@ -47,6 +47,22 @@
 </record>
 
 <record>
+  <source="A" />
+  <dest="X" />
+  <username="YnEbnSlgdcGqN" />
+  <courses>
+    <course="IN1000" />
+    <course="IN1010" />
+    <course="IN1020" />
+    <course="IN1030" />
+    <course="IN1060" />
+    <course="IN1080" />
+    <course="IN1140" />
+    <course="IN1150" />
+  </courses>
+</record>
+
+<record>
   <source="B" />
   <dest="X" />
   <username="SDwfhsCAoIjsbOadIy" />
@@ -60,6 +76,13 @@
 </record>
 
 <record>
+  <source="A" />
+  <dest="X" />
+  <group="3028" />
+  <grade="Master" />
+</record>
+
+<record>
   <source="B" />
   <dest="X" />
   <semester="8" />
@@ -68,5 +91,47 @@
     <course="IN1010" />
     <course="IN1030" />
   </courses>
+</record>
+
+<record>
+  <source="A" />
+  <dest="X" />
+  <group="8591" />
+  <grade="Master" />
+  <courses>
+    <course="IN1010" />
+    <course="IN1020" />
+    <course="IN1900" />
+  </courses>
+</record>
+
+<record>
+  <source="A" />
+  <dest="X" />
+  <id="267" />
+  <group="4153" />
+  <semester="4" />
+  <courses>
+    <course="IN1000" />
+    <course="IN1010" />
+    <course="IN1080" />
+    <course="IN1140" />
+    <course="IN1910" />
+  </courses>
+</record>
+
+<record>
+  <source="A" />
+  <dest="X" />
+  <id="2238" />
+  <group="2591" />
+  <grade="Bachelor" />
+</record>
+
+<record>
+  <source="A" />
+  <dest="X" />
+  <username="OuxcwiLCYgEMOMb" />
+  <id="3496" />
 </record>
 

@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TYPE_NOT_FOUND 2
-
 struct ClientList
 {
     struct Client *head;
@@ -21,31 +19,6 @@ struct ClientList *create_client_list()
     list->head = NULL;
     list->size = 0;
     return list;
-}
-
-int check_format_type(char *buffer, int len)
-{
-    int hasNullByte = 0;
-    for (int i = 0; i < len; i++)
-    {
-        if ((unsigned char)buffer[i] == '<')
-        {
-            return 1; // XML format
-        }
-        if ((unsigned char)buffer[i] == '\0')
-        {
-            hasNullByte = 1; // potentially binary format
-        }
-    }
-
-    if (hasNullByte)
-    {
-        return 0; // binary format
-    }
-    else
-    {
-        return TYPE_NOT_FOUND; // format not found
-    }
 }
 
 void insert(struct ClientList *list, struct Client *client)

@@ -111,6 +111,7 @@ int tcp_write_loop(int sock, char *buffer, int bytes)
 
 void tcp_close(int sock)
 {
+    printf("Closing socket: %d\n", sock);
     close(sock);
 }
 

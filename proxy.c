@@ -129,7 +129,7 @@ void forward_message(Record *msg, struct ClientList *list)
 
     if (msg->has_dest)
     {
-        fprintf(stderr, "forward_message to: %c\n", msg->dest);
+        fprintf(stderr, "Forwarding message to: %c\n", msg->dest);
     }
     else
     {
@@ -139,7 +139,6 @@ void forward_message(Record *msg, struct ClientList *list)
 
     char *buffer;
     int bufSize = 0;
-    printf("Client's format: %c\n", client->format_type);
     if (client->format_type == 'X')
     {
         buffer = recordToXML(msg, &bufSize);
@@ -225,7 +224,6 @@ void handle_client(Client *client, struct ClientList *list, fd_set *master_fds)
     else
     {
         printf("Removing client\n");
-        remove_node(list, client->source);
         remove_client(client, list, master_fds);
     }
 }
@@ -252,6 +250,7 @@ int main(int argc, char *argv[])
     fd_set master_fds, read_fds;
     int fd_max;
     int new_client_sock;
+    int should_exit = 0;
 
     FD_ZERO(&master_fds);
     FD_ZERO(&read_fds);
@@ -263,7 +262,7 @@ int main(int argc, char *argv[])
     {
         read_fds = master_fds;
 
-        if (tcp_wait_timeout(&read_fds, fd_max, 5) == -1)
+        if (tcp_wait_timeout(&read_fds, fd_max, 10) == -1)
         {
             perror("select");
             exit(-1);
@@ -278,6 +277,7 @@ int main(int argc, char *argv[])
                 {
                     // New connection on the server socket
                     new_client_sock = handle_new_client(server_sock, clientList);
+                    printf("New client connected on socket %d\n", new_client_sock);
                     FD_SET(new_client_sock, &master_fds);
                     if (new_client_sock > fd_max)
                     {
@@ -299,8 +299,14 @@ int main(int argc, char *argv[])
                 }
             }
         }
-    } while (clientList->size > 0);
-
+        if (clientList->size == 0)
+        {
+            printf("No clients connected. Closing proxy server\n");
+            should_exit = 1;
+        }
+    } while (!should_exit);
+    printf("Closing server\n");
+    sleep(3); // Added to actually get a print statement of it closing, otherwise it closes too fast
     delete_client_list(clientList);
     tcp_close(server_sock);
 

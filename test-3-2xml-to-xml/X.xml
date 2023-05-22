@@ -25,7 +25,6 @@
     <course="IN1060" />
     <course="IN1080" />
     <course="IN1900" />
-    <course="IN1910" />
   </courses>
 </record>
 
@@ -38,7 +37,6 @@
     <course="IN1080" />
     <course="IN1140" />
     <course="IN1900" />
-    <course="IN1910" />
   </courses>
 </record>
 
@@ -46,6 +44,13 @@
   <source="A" />
   <dest="X" />
   <grade="Master" />
+</record>
+
+<record>
+  <source="B" />
+  <dest="X" />
+  <id="2515" />
+  <grade="Bachelor" />
 </record>
 
 <record>
@@ -66,22 +71,12 @@
 </record>
 
 <record>
-  <source="B" />
-  <dest="X" />
-  <id="2515" />
-  <grade="Bachelor" />
-</record>
-
-<record>
   <source="A" />
   <dest="X" />
   <id="3075" />
   <semester="18" />
   <courses>
     <course="IN1010" />
-    <course="IN1030" />
-    <course="IN1050" />
-    <course="IN1080" />
     <course="IN1150" />
   </courses>
 </record>
@@ -112,9 +107,7 @@
   <semester="18" />
   <courses>
     <course="IN1020" />
-    <course="IN1080" />
     <course="IN1140" />
-    <course="IN1150" />
     <course="IN1900" />
     <course="IN1910" />
   </courses>
@@ -150,7 +143,6 @@
   <courses>
     <course="IN1050" />
     <course="IN1080" />
-    <course="IN1150" />
     <course="IN1910" />
   </courses>
 </record>
