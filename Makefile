@@ -76,6 +76,4 @@ realclean: clean
 	rm -f anyReceiver
 	rm -f proxy
 
-ificp:
-	scp A.xml anyReceiver.c binfile.c binSender.c connection.c linkedlist.c proxy.c binfile.h connection.h linkedlist.h proxy.h record.c record.h recordFromFormat.c recordFromFormat.h recordToFormat.c recordToFormat.h RunTest.sh xmlSender.c xmlfile.c xmlfile.h makefile victocla@login.ifi.uio.no:/uio/hume/student-u02/victocla/Documents/IN2140/eksamen
 
