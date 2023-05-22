@@ -15,7 +15,7 @@
 #include <string.h>
 
 typedef struct Client Client;
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 10000
 struct ClientList *clientList = NULL;
 
 void usage(char *cmd)
