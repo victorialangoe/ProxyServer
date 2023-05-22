@@ -12,9 +12,7 @@
 #include <string.h>
 #include "record.h"
 #include <stdlib.h>
-#include <math.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include <arpa/inet.h>
 
 int getCourseCode(char *course)
 {

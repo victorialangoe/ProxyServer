@@ -10,9 +10,9 @@
 #include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <string.h>
 
 typedef struct Client Client;
 #define BUFFER_SIZE 10000
@@ -96,8 +96,8 @@ int handle_new_client(int server_sock, struct ClientList *list)
 void remove_client(Client *client, struct ClientList *list, fd_set *master_fds)
 {
     FD_CLR(client->socket_fd, master_fds);
-    remove_node(list, client->source);
     tcp_close(client->socket_fd);
+    remove_node(list, client->source);
     memset(client, 0, sizeof(Client));
 }
 

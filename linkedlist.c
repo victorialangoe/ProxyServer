@@ -71,13 +71,14 @@ void remove_node(struct ClientList *list, int source)
             {
                 prev->next = tmp->next;
             }
+
             free(tmp);
+            list->size--;
             return;
         }
         prev = tmp;
         tmp = tmp->next;
     }
-    list->size--;
 }
 
 struct Client *find_client_by_source(struct ClientList *list, char source)
